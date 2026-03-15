@@ -20,18 +20,17 @@ body {
   letter-spacing: 2px;
 }
 
-.topo {
+.topoInfo {
   background: rgba(0, 0, 0, 0.62);
   padding: 20px;
   border-radius: 16px;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto 20px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.45);
 }
 
 .perfilJogador p,
-.statusGrid p,
-.topo p {
+.statusGrid p {
   margin: 8px 0;
   font-size: 18px;
 }
@@ -49,7 +48,6 @@ body {
   border-radius: 999px;
   font-weight: bold;
   margin-left: 6px;
-  transition: 0.3s ease;
 }
 
 .titulo-iniciante {
@@ -119,6 +117,48 @@ body {
   transition: width 0.35s ease;
 }
 
+.abasTopo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 1200px;
+  margin: 0 auto 20px;
+}
+
+.abaBtn {
+  padding: 12px 20px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.abaBtn.ativa {
+  background: #0a5;
+  box-shadow: 0 0 14px rgba(0,255,140,0.35);
+}
+
+.abaConteudo {
+  display: none;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.abaConteudo.ativa {
+  display: block;
+}
+
+.painelCentral,
+.painelBox {
+  background: rgba(0, 0, 0, 0.76);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+}
+
 button {
   padding: 10px 15px;
   margin: 5px;
@@ -128,54 +168,17 @@ button {
   color: white;
   font-weight: bold;
   cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 button:hover {
   background: #0c7;
-  transform: translateY(-1px);
-  box-shadow: 0 0 12px rgba(0, 255, 140, 0.35);
 }
 
-button:disabled {
-  opacity: 0.65;
-  cursor: default;
-  transform: none;
-  box-shadow: none;
-}
-
-.botoesTopo,
 .botoesLoja {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-}
-
-.layoutPrincipal {
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.jogoColuna {
-  min-width: 0;
-}
-
-.painelLateral {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.painelBox,
-.janela {
-  background: rgba(0, 0, 0, 0.76);
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
 }
 
 .cartaArea {
@@ -215,24 +218,8 @@ button:disabled {
 .revelada-raro { box-shadow: 0 0 22px rgba(47, 184, 255, 0.55); }
 .revelada-epico { box-shadow: 0 0 28px rgba(208, 43, 255, 0.7); }
 .revelada-lendario { box-shadow: 0 0 34px rgba(255, 215, 0, 0.85); }
-.revelada-secreta {
-  box-shadow: 0 0 40px rgba(255, 0, 0, 0.95);
-  animation: packAbrindo 0.65s ease, pulsoSecreto 1.2s infinite alternate;
-}
-.revelada-secreta2 {
-  box-shadow: 0 0 46px rgba(255, 60, 247, 1);
-  animation: packAbrindo 0.65s ease, secreta2Pulse 1s infinite alternate;
-}
-
-@keyframes pulsoSecreto {
-  from { box-shadow: 0 0 18px rgba(255, 0, 0, 0.7); }
-  to { box-shadow: 0 0 42px rgba(255, 0, 0, 1); }
-}
-
-@keyframes secreta2Pulse {
-  from { box-shadow: 0 0 18px rgba(255, 60, 247, 0.7); }
-  to { box-shadow: 0 0 48px rgba(255, 60, 247, 1); }
-}
+.revelada-secreta { box-shadow: 0 0 40px rgba(255, 0, 0, 0.95); }
+.revelada-secreta2 { box-shadow: 0 0 46px rgba(255, 60, 247, 1); }
 
 .efeitoTela {
   position: fixed;
@@ -287,14 +274,6 @@ button:disabled {
   border-radius: 8px;
 }
 
-.janela {
-  display: none;
-  margin-top: 20px;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
 #inventario,
 #equipadas {
   display: flex;
@@ -309,10 +288,7 @@ button:disabled {
   padding: 10px;
   border-radius: 12px;
   width: 145px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
-.card:hover { transform: scale(1.05); }
 
 .card img {
   width: 100px;
@@ -321,40 +297,14 @@ button:disabled {
   border-radius: 8px;
 }
 
-.card p { margin: 8px 0; }
+.comum { border: 2px solid #6cff6c; }
+.raro { border: 2px solid #2fb8ff; }
+.epico { border: 2px solid #d02bff; }
+.lendario { border: 2px solid gold; }
+.secreta { border: 2px solid red; }
+.secreta2 { border: 2px solid #ff3cf7; }
 
-.comum { border: 2px solid #6cff6c; box-shadow: 0 0 10px rgba(108, 255, 108, 0.18); }
-.raro { border: 2px solid #2fb8ff; box-shadow: 0 0 12px rgba(47, 184, 255, 0.24); }
-.epico { border: 2px solid #d02bff; box-shadow: 0 0 14px rgba(208, 43, 255, 0.34); }
-.lendario { border: 2px solid gold; box-shadow: 0 0 18px rgba(255, 215, 0, 0.5); }
-.secreta { border: 2px solid red; box-shadow: 0 0 20px rgba(255, 0, 0, 0.7); animation: secretaGlow 2s infinite alternate; }
-.secreta2 { border: 2px solid #ff3cf7; box-shadow: 0 0 26px rgba(255, 60, 247, 0.95); animation: secreta2Glow 1.5s infinite alternate; }
-
-@keyframes secretaGlow {
-  from { box-shadow: 0 0 10px red; }
-  to { box-shadow: 0 0 35px red; }
-}
-
-@keyframes secreta2Glow {
-  from { box-shadow: 0 0 14px rgba(255, 60, 247, 0.7); }
-  to { box-shadow: 0 0 40px rgba(255, 60, 247, 1); }
-}
-
-.questBox {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 12px;
-  margin: 10px auto;
-  max-width: 600px;
-  text-align: left;
-}
-
-.questPronta {
-  border-color: #32ff72;
-  box-shadow: 0 0 12px rgba(50, 255, 114, 0.2);
-}
-
+.questBox,
 .rankingItem,
 .chatMsg {
   background: rgba(255,255,255,0.06);
@@ -362,6 +312,20 @@ button:disabled {
   padding: 10px;
   margin-bottom: 8px;
   text-align: left;
+}
+
+.questPronta {
+  border: 1px solid #32ff72;
+}
+
+.layoutRanking {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.painelChat {
+  grid-column: 1 / -1;
 }
 
 .rankingTop1 { border-left: 4px solid gold; }
@@ -386,8 +350,8 @@ button:disabled {
   border: none;
 }
 
-@media (max-width: 1100px) {
-  .layoutPrincipal {
+@media (max-width: 900px) {
+  .layoutRanking {
     grid-template-columns: 1fr;
   }
 }
