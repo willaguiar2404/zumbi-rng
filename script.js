@@ -1,11 +1,22 @@
+import {
+  db,
+  collection,
+  doc,
+  setDoc,
+  addDoc,
+  serverTimestamp,
+  query,
+  orderBy,
+  limit,
+  onSnapshot
+} from "./firebase-config.js";
+
 function formatar(n) {
   n = Number(n) || 0;
-
   if (n >= 1e12) return (n / 1e12).toFixed(1) + "T";
   if (n >= 1e9) return (n / 1e9).toFixed(1) + "B";
   if (n >= 1e6) return (n / 1e6).toFixed(1) + "MI";
   if (n >= 1e3) return (n / 1e3).toFixed(1) + "K";
-
   return Math.floor(n).toString();
 }
 
@@ -32,7 +43,7 @@ function carregarCartas(chave) {
     const valor = JSON.parse(localStorage.getItem(chave));
     if (!Array.isArray(valor)) return [];
     return valor.map(normalizarCarta).filter(Boolean);
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -69,7 +80,6 @@ const cartasBase = [
 
 const maxEquip = 20;
 const xpPorGiro = 50;
-
 const precoAbrir3 = 100000;
 const precoAutoOpen = 150000;
 
@@ -80,7 +90,9 @@ const precoPacks = {
   lendario: 25000
 };
 
-let moedas = carregarNumero("moedas", 500);
+const primeiroAcesso = localStorage.getItem("primeiroAcessoConcluido") !== "true";
+
+let moedas = carregarNumero("moedas", primeiroAcesso ? 500 : 0);
 let giros = carregarNumero("giros", 0);
 let nivel = carregarNumero("nivel", 1);
 let xp = carregarNumero("xp", 0);
@@ -94,8 +106,20 @@ let skipAnimacao = localStorage.getItem("skipAnimacao") === "true";
 
 let inventario = carregarCartas("inventario");
 let equipadas = carregarCartas("equipadas");
-
 let quests = JSON.parse(localStorage.getItem("quests")) || null;
+
+let playerId = localStorage.getItem("playerId");
+if (!playerId) {
+  playerId = crypto.randomUUID ? crypto.randomUUID() : "player_" + Math.random().toString(36).slice(2);
+  localStorage.setItem("playerId", playerId);
+}
+
+let playerName = localStorage.getItem("playerName");
+if (!playerName) {
+  playerName = prompt("Digite seu nome de jogador:") || "Sobrevivente";
+  playerName = playerName.trim().slice(0, 20) || "Sobrevivente";
+  localStorage.setItem("playerName", playerName);
+}
 
 function xpNecessarioDoNivel(n) {
   return n * 1000;
@@ -118,18 +142,37 @@ function salvar() {
   localStorage.setItem("inventario", JSON.stringify(inventario));
   localStorage.setItem("equipadas", JSON.stringify(equipadas));
   localStorage.setItem("quests", JSON.stringify(quests));
+  localStorage.setItem("playerName", playerName);
+  localStorage.setItem("playerId", playerId);
+  localStorage.setItem("primeiroAcessoConcluido", "true");
 }
 
 function rendaTotal() {
   let total = 0;
-
-  for (const carta of equipadas) {
-    total += Number(carta.moeda) || 0;
-  }
-
+  for (const carta of equipadas) total += Number(carta.moeda) || 0;
   total *= bonusNivelMoeda();
-
   return total;
+}
+
+function obterTituloJogador() {
+  if (giros >= 5000) return { texto: "Deus do Apocalipse", classe: "titulo-divino" };
+  if (giros >= 2000) return { texto: "Imperador da Ruína", classe: "titulo-apocalipse" };
+  if (giros >= 750) return { texto: "Lenda da Zona Morta", classe: "titulo-lendario" };
+  if (giros >= 250) return { texto: "Caçador de Aberrações", classe: "titulo-cacador" };
+  if (giros >= 50) return { texto: "Sobrevivente Veterano", classe: "titulo-sobrevivente" };
+  return { texto: "Catador de Restos", classe: "titulo-iniciante" };
+}
+
+function atualizarTituloJogador() {
+  const badge = document.getElementById("tituloJogador");
+  const nome = document.getElementById("nomeJogador");
+  const info = obterTituloJogador();
+
+  if (nome) nome.innerText = playerName;
+  if (!badge) return;
+
+  badge.innerText = info.texto;
+  badge.className = "badge-titulo " + info.classe;
 }
 
 function atualizarUI() {
@@ -145,71 +188,58 @@ function atualizarUI() {
   document.getElementById("barraXp").style.width = porcentagem + "%";
 
   const statusAbrir3 = document.getElementById("statusAbrir3");
-  if (statusAbrir3) {
-    if (!desbloqueouAbrir3) {
-      statusAbrir3.innerText = "Abrir 3: BLOQUEADO";
-    } else {
-      statusAbrir3.innerText = "Abrir 3: " + (abrir3Ativo ? "LIGADO" : "DESLIGADO");
-    }
-  }
+  statusAbrir3.innerText = !desbloqueouAbrir3
+    ? "Abrir 3: BLOQUEADO"
+    : "Abrir 3: " + (abrir3Ativo ? "LIGADO" : "DESLIGADO");
 
   const statusAutoOpen = document.getElementById("statusAutoOpen");
-  if (statusAutoOpen) {
-    if (!desbloqueouAutoOpen) {
-      statusAutoOpen.innerText = "Auto Open: BLOQUEADO";
-    } else {
-      statusAutoOpen.innerText = "Auto Open: " + (autoOpenAtivo ? "LIGADO" : "DESLIGADO");
-    }
-  }
+  statusAutoOpen.innerText = !desbloqueouAutoOpen
+    ? "Auto Open: BLOQUEADO"
+    : "Auto Open: " + (autoOpenAtivo ? "LIGADO" : "DESLIGADO");
 
   const statusSkip = document.getElementById("statusSkip");
-  if (statusSkip) {
-    statusSkip.innerText = "Skip Animation: " + (skipAnimacao ? "LIGADO" : "DESLIGADO");
-  }
+  statusSkip.innerText = "Skip Animation: " + (skipAnimacao ? "LIGADO" : "DESLIGADO");
 
   const btnAbrir3 = document.getElementById("btnAbrir3");
-  if (btnAbrir3) {
-    if (!desbloqueouAbrir3) {
-      btnAbrir3.innerText = `Comprar Abrir 3 (${formatar(precoAbrir3)})`;
-    } else {
-      btnAbrir3.innerText = abrir3Ativo ? "Desligar Abrir 3" : "Ligar Abrir 3";
-    }
-  }
+  btnAbrir3.innerText = !desbloqueouAbrir3
+    ? `Comprar Abrir 3 (${formatar(precoAbrir3)})`
+    : abrir3Ativo ? "Desligar Abrir 3" : "Ligar Abrir 3";
 
   const btnAutoOpen = document.getElementById("btnAutoOpen");
-  if (btnAutoOpen) {
-    if (!desbloqueouAutoOpen) {
-      btnAutoOpen.innerText = `Comprar Auto Open (${formatar(precoAutoOpen)})`;
-    } else {
-      btnAutoOpen.innerText = autoOpenAtivo ? "Desligar Auto Open" : "Ligar Auto Open";
-    }
-  }
+  btnAutoOpen.innerText = !desbloqueouAutoOpen
+    ? `Comprar Auto Open (${formatar(precoAutoOpen)})`
+    : autoOpenAtivo ? "Desligar Auto Open" : "Ligar Auto Open";
+
+  atualizarTituloJogador();
 }
 
 function abrirLoja() {
   document.getElementById("loja").style.display = "block";
 }
-
 function fecharLoja() {
   document.getElementById("loja").style.display = "none";
 }
-
 function abrirInventario() {
   document.getElementById("inventarioTela").style.display = "block";
   renderInventario();
 }
-
 function fecharInventario() {
   document.getElementById("inventarioTela").style.display = "none";
 }
-
 function abrirQuests() {
   document.getElementById("questsTela").style.display = "block";
   renderQuests();
 }
-
 function fecharQuests() {
   document.getElementById("questsTela").style.display = "none";
+}
+function trocarNome() {
+  const novo = prompt("Novo nome do jogador:", playerName);
+  if (!novo) return;
+  playerName = novo.trim().slice(0, 20) || playerName;
+  salvar();
+  atualizarUI();
+  sincronizarRanking();
 }
 
 function rolarRaridade(tipo) {
@@ -250,19 +280,13 @@ function rolarRaridade(tipo) {
 function gerarCarta(tipo) {
   const raridade = rolarRaridade(tipo);
   const pool = cartasBase.filter(c => c.raridade === raridade);
-
-  if (!pool.length) {
-    return clonarCarta(cartasBase[0]);
-  }
-
   const base = pool[Math.floor(Math.random() * pool.length)];
-  return clonarCarta(base);
+  return clonarCarta(base || cartasBase[0]);
 }
 
 function gerarCartaPorRaridade(raridade) {
   const pool = cartasBase.filter(c => c.raridade === raridade);
-  if (!pool.length) return clonarCarta(cartasBase[0]);
-  return clonarCarta(pool[Math.floor(Math.random() * pool.length)]);
+  return clonarCarta(pool[Math.floor(Math.random() * pool.length)] || cartasBase[0]);
 }
 
 function tocarSom(raridade) {
@@ -279,18 +303,9 @@ function tocarSom(raridade) {
 
     if (raridade === "raro") frequencia = 520;
     if (raridade === "epico") frequencia = 640;
-    if (raridade === "lendario") {
-      frequencia = 820;
-      duracao = 0.2;
-    }
-    if (raridade === "secreta") {
-      frequencia = 980;
-      duracao = 0.28;
-    }
-    if (raridade === "secreta2") {
-      frequencia = 1200;
-      duracao = 0.35;
-    }
+    if (raridade === "lendario") { frequencia = 820; duracao = 0.2; }
+    if (raridade === "secreta") { frequencia = 980; duracao = 0.28; }
+    if (raridade === "secreta2") { frequencia = 1200; duracao = 0.35; }
 
     oscilador.type = "triangle";
     oscilador.frequency.setValueAtTime(frequencia, contexto.currentTime);
@@ -300,7 +315,7 @@ function tocarSom(raridade) {
 
     oscilador.start();
     oscilador.stop(contexto.currentTime + duracao);
-  } catch (e) {}
+  } catch {}
 }
 
 function ativarFlashTela(raridade) {
@@ -319,8 +334,7 @@ function ativarFlashTela(raridade) {
 }
 
 function limparResultadoTriplo() {
-  const box = document.getElementById("resultadoTriplo");
-  box.innerHTML = "";
+  document.getElementById("resultadoTriplo").innerHTML = "";
 }
 
 function mostrarResultadoTriplo(cartas) {
@@ -359,10 +373,7 @@ function tocarAnimacaoCarta(carta) {
   img.src = carta.img;
   nome.innerText = `${carta.nome} • ${carta.raridade.toUpperCase()}`;
 
-  if (!skipAnimacao) {
-    box.classList.add("packAbrindo");
-  }
-
+  if (!skipAnimacao) box.classList.add("packAbrindo");
   box.classList.add("revelada-" + carta.raridade);
 
   tocarSom(carta.raridade);
@@ -371,7 +382,6 @@ function tocarAnimacaoCarta(carta) {
 
 function ganharXp(valor) {
   xp += valor;
-
   while (xp >= xpNecessarioDoNivel(nivel)) {
     xp -= xpNecessarioDoNivel(nivel);
     nivel += 1;
@@ -399,17 +409,15 @@ function processarAberturaPack(tipo, mostrarAnimacao = true) {
 }
 
 function abrirPack(tipo) {
-  const ok = processarAberturaPack(tipo, true);
-
-  if (!ok) {
+  if (!processarAberturaPack(tipo, true)) {
     alert("Moedas insuficientes");
     return;
   }
-
   atualizarUI();
   renderInventario();
   renderQuests();
   salvar();
+  sincronizarRanking();
 }
 
 function alternarAbrir3() {
@@ -418,22 +426,18 @@ function alternarAbrir3() {
       alert("Moedas insuficientes para comprar Abrir 3 Packs");
       return;
     }
-
     moedas -= precoAbrir3;
     desbloqueouAbrir3 = true;
     abrir3Ativo = false;
-
     atualizarUI();
     salvar();
     alert("✅ Você comprou Abrir 3 Packs para sempre!");
+    sincronizarRanking();
     return;
   }
 
   abrir3Ativo = !abrir3Ativo;
-
-  if (abrir3Ativo) {
-    autoOpenAtivo = false;
-  }
+  if (abrir3Ativo) autoOpenAtivo = false;
 
   atualizarUI();
   salvar();
@@ -452,22 +456,18 @@ function alternarAutoOpen() {
       alert("Moedas insuficientes para comprar Auto Open");
       return;
     }
-
     moedas -= precoAutoOpen;
     desbloqueouAutoOpen = true;
     autoOpenAtivo = false;
-
     atualizarUI();
     salvar();
     alert("✅ Você comprou Auto Open para sempre!");
+    sincronizarRanking();
     return;
   }
 
   autoOpenAtivo = !autoOpenAtivo;
-
-  if (autoOpenAtivo) {
-    abrir3Ativo = false;
-  }
+  if (autoOpenAtivo) abrir3Ativo = false;
 
   atualizarUI();
   salvar();
@@ -497,80 +497,29 @@ function equiparMelhorTime() {
 
   renderInventario();
   salvar();
+  sincronizarRanking();
 }
 
 function contarSecretasNormais() {
   let total = 0;
-  const todas = [...inventario, ...equipadas];
-
-  todas.forEach(carta => {
-    if (carta && carta.raridade === "secreta") {
-      total++;
-    }
+  [...inventario, ...equipadas].forEach(carta => {
+    if (carta && carta.raridade === "secreta") total++;
   });
-
   return total;
 }
 
 function criarQuests() {
   return [
-    {
-      id: "quest_giros_10",
-      titulo: "Sobrevivente Iniciante",
-      descricao: "Abra 10 packs",
-      tipo: "giros",
-      meta: 10,
-      recompensaMoedas: 2000,
-      recompensaCarta: null,
-      resgatada: false
-    },
-    {
-      id: "quest_giros_50",
-      titulo: "Caçador de Relíquias",
-      descricao: "Abra 50 packs",
-      tipo: "giros",
-      meta: 50,
-      recompensaMoedas: 15000,
-      recompensaCarta: { raridade: "epico" },
-      resgatada: false
-    },
-    {
-      id: "quest_nivel_5",
-      titulo: "Veterano da Zona Morta",
-      descricao: "Alcance o nível 5",
-      tipo: "nivel",
-      meta: 5,
-      recompensaMoedas: 30000,
-      recompensaCarta: { raridade: "lendario" },
-      resgatada: false
-    },
-    {
-      id: "quest_moedas_100k",
-      titulo: "Magnata do Apocalipse",
-      descricao: "Junte 100K moedas",
-      tipo: "moedas",
-      meta: 100000,
-      recompensaMoedas: 50000,
-      recompensaCarta: null,
-      resgatada: false
-    },
-    {
-      id: "quest_5_secretas",
-      titulo: "Apocalipse Supremo",
-      descricao: "Consiga 5 cartas SECRETAS",
-      tipo: "secretas",
-      meta: 5,
-      recompensaMoedas: 0,
-      recompensaCarta: { raridade: "secreta2" },
-      resgatada: false
-    }
+    { id: "quest_giros_10", titulo: "Sobrevivente Iniciante", descricao: "Abra 10 packs", tipo: "giros", meta: 10, recompensaMoedas: 2000, recompensaCarta: null, resgatada: false },
+    { id: "quest_giros_50", titulo: "Caçador de Relíquias", descricao: "Abra 50 packs", tipo: "giros", meta: 50, recompensaMoedas: 15000, recompensaCarta: { raridade: "epico" }, resgatada: false },
+    { id: "quest_nivel_5", titulo: "Veterano da Zona Morta", descricao: "Alcance o nível 5", tipo: "nivel", meta: 5, recompensaMoedas: 30000, recompensaCarta: { raridade: "lendario" }, resgatada: false },
+    { id: "quest_moedas_100k", titulo: "Magnata do Apocalipse", descricao: "Junte 100K moedas", tipo: "moedas", meta: 100000, recompensaMoedas: 50000, recompensaCarta: null, resgatada: false },
+    { id: "quest_5_secretas", titulo: "Apocalipse Supremo", descricao: "Consiga 5 cartas SECRETAS", tipo: "secretas", meta: 5, recompensaMoedas: 0, recompensaCarta: { raridade: "secreta2" }, resgatada: false }
   ];
 }
 
 function garantirQuests() {
-  if (!Array.isArray(quests) || quests.length === 0) {
-    quests = criarQuests();
-  }
+  if (!Array.isArray(quests) || quests.length === 0) quests = criarQuests();
 }
 
 function progressoQuest(quest) {
@@ -587,13 +536,11 @@ function questCompleta(quest) {
 
 function resgatarQuest(id) {
   const quest = quests.find(q => q.id === id);
-  if (!quest) return;
-  if (quest.resgatada) return;
-  if (!questCompleta(quest)) return;
+  if (!quest || quest.resgatada || !questCompleta(quest)) return;
 
   moedas += Number(quest.recompensaMoedas) || 0;
 
-  if (quest.recompensaCarta && quest.recompensaCarta.raridade) {
+  if (quest.recompensaCarta?.raridade) {
     const cartaPremio = gerarCartaPorRaridade(quest.recompensaCarta.raridade);
     inventario.push(cartaPremio);
     tocarAnimacaoCarta(cartaPremio);
@@ -605,16 +552,14 @@ function resgatarQuest(id) {
   renderInventario();
   renderQuests();
   salvar();
+  sincronizarRanking();
 
   alert("Quest resgatada com sucesso!");
 }
 
 function renderQuests() {
   garantirQuests();
-
   const lista = document.getElementById("listaQuests");
-  if (!lista) return;
-
   lista.innerHTML = "";
 
   quests.forEach(quest => {
@@ -625,7 +570,7 @@ function renderQuests() {
     box.className = "questBox" + (pronta && !quest.resgatada ? " questPronta" : "");
 
     let recompensaTexto = `Moedas: ${formatar(quest.recompensaMoedas)}`;
-    if (quest.recompensaCarta && quest.recompensaCarta.raridade) {
+    if (quest.recompensaCarta?.raridade) {
       recompensaTexto += ` + Carta ${quest.recompensaCarta.raridade.toUpperCase()}`;
     }
 
@@ -656,7 +601,6 @@ function renderInventario() {
 
   inventario.forEach((c, i) => {
     const valorVenda = (Number(c.moeda) || 0) * 20;
-
     const card = document.createElement("div");
     card.className = "card " + c.raridade;
 
@@ -668,7 +612,6 @@ function renderInventario() {
       <button onclick="equipar(${i})">Equipar</button>
       <button onclick="vender(${i})">Vender ${formatar(valorVenda)}</button>
     `;
-
     inv.appendChild(card);
   });
 
@@ -683,7 +626,6 @@ function renderInventario() {
       <p>${formatar(c.moeda)}/s</p>
       <button onclick="desequipar(${i})">Remover</button>
     `;
-
     eq.appendChild(card);
   });
 
@@ -692,7 +634,6 @@ function renderInventario() {
 
 function equipar(i) {
   if (i < 0 || i >= inventario.length) return;
-
   if (equipadas.length >= maxEquip) {
     alert("Máximo 20 cartas equipadas");
     return;
@@ -707,11 +648,11 @@ function equipar(i) {
   atualizarUI();
   renderInventario();
   salvar();
+  sincronizarRanking();
 }
 
 function desequipar(i) {
   if (i < 0 || i >= equipadas.length) return;
-
   const carta = normalizarCarta(equipadas[i]);
   if (!carta) return;
 
@@ -721,23 +662,109 @@ function desequipar(i) {
   atualizarUI();
   renderInventario();
   salvar();
+  sincronizarRanking();
 }
 
 function vender(i) {
   if (i < 0 || i >= inventario.length) return;
-
   const carta = normalizarCarta(inventario[i]);
   if (!carta) return;
 
-  const valor = (Number(carta.moeda) || 0) * 20;
-  moedas += valor;
+  moedas += (Number(carta.moeda) || 0) * 20;
   inventario.splice(i, 1);
 
   atualizarUI();
   renderInventario();
   renderQuests();
   salvar();
+  sincronizarRanking();
 }
+
+async function sincronizarRanking() {
+  try {
+    const titulo = obterTituloJogador();
+    await setDoc(doc(db, "players", playerId), {
+      playerId,
+      name: playerName,
+      giros,
+      nivel,
+      renda: Math.floor(rendaTotal()),
+      titulo: titulo.texto,
+      updatedAt: Date.now()
+    }, { merge: true });
+  } catch (e) {
+    console.error("Erro ao sincronizar ranking:", e);
+  }
+}
+
+function ouvirRanking() {
+  const q = query(collection(db, "players"), orderBy("giros", "desc"), limit(10));
+  onSnapshot(q, snapshot => {
+    const lista = document.getElementById("rankingLista");
+    lista.innerHTML = "";
+
+    let pos = 0;
+    snapshot.forEach(docSnap => {
+      pos++;
+      const item = docSnap.data();
+      const div = document.createElement("div");
+      div.className = "rankingItem" + (pos <= 3 ? ` rankingTop${pos}` : "");
+      div.innerHTML = `
+        <b>#${pos} ${item.name || "Jogador"}</b><br>
+        <small>${item.titulo || "Sem título"}</small><br>
+        Giros: ${formatar(item.giros || 0)} | Nível: ${formatar(item.nivel || 1)}
+      `;
+      lista.appendChild(div);
+    });
+  });
+}
+
+async function enviarMensagemChat() {
+  const input = document.getElementById("chatInput");
+  const texto = (input.value || "").trim();
+  if (!texto) return;
+
+  try {
+    await addDoc(collection(db, "chat"), {
+      name: playerName,
+      titulo: obterTituloJogador().texto,
+      text: texto.slice(0, 140),
+      createdAt: serverTimestamp(),
+      createdAtMs: Date.now()
+    });
+    input.value = "";
+  } catch (e) {
+    console.error("Erro ao enviar mensagem:", e);
+    alert("Não foi possível enviar a mensagem.");
+  }
+}
+
+function ouvirChat() {
+  const q = query(collection(db, "chat"), orderBy("createdAtMs", "desc"), limit(30));
+  onSnapshot(q, snapshot => {
+    const box = document.getElementById("chatMensagens");
+    box.innerHTML = "";
+
+    const docs = [];
+    snapshot.forEach(s => docs.push(s.data()));
+    docs.reverse().forEach(msg => {
+      const div = document.createElement("div");
+      div.className = "chatMsg";
+      div.innerHTML = `
+        <b>${msg.name || "Jogador"}</b>
+        <small> • ${msg.titulo || "Sem título"}</small><br>
+        ${msg.text || ""}
+      `;
+      box.appendChild(div);
+    });
+
+    box.scrollTop = box.scrollHeight;
+  });
+}
+
+document.getElementById("chatInput")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") enviarMensagemChat();
+});
 
 setInterval(() => {
   moedas += rendaTotal();
@@ -747,11 +774,9 @@ setInterval(() => {
 }, 1000);
 
 setInterval(() => {
-  if (!desbloqueouAutoOpen) return;
-  if (!autoOpenAtivo) return;
+  if (!desbloqueouAutoOpen || !autoOpenAtivo) return;
 
   const abriu = processarAberturaPack("lendario", true);
-
   if (!abriu) {
     autoOpenAtivo = false;
     alert("Auto Open desligado por falta de moedas.");
@@ -761,14 +786,13 @@ setInterval(() => {
   renderInventario();
   renderQuests();
   salvar();
+  sincronizarRanking();
 }, 1500);
 
 setInterval(() => {
-  if (!desbloqueouAbrir3) return;
-  if (!abrir3Ativo) return;
+  if (!desbloqueouAbrir3 || !abrir3Ativo) return;
 
   const precoUso = precoPacks.lendario * 3;
-
   if (moedas < precoUso) {
     abrir3Ativo = false;
     alert("Abrir 3 desligado por falta de moedas.");
@@ -780,17 +804,15 @@ setInterval(() => {
   moedas -= precoUso;
 
   const cartasAbertas = [];
-
   for (let i = 0; i < 3; i++) {
     giros += 1;
     ganharXp(xpPorGiro);
-
     const carta = gerarCarta("lendario");
     inventario.push(carta);
     cartasAbertas.push(carta);
   }
 
-  if (cartasAbertas.length > 0) {
+  if (cartasAbertas.length) {
     tocarAnimacaoCarta(cartasAbertas[cartasAbertas.length - 1]);
     mostrarResultadoTriplo(cartasAbertas);
   }
@@ -799,7 +821,12 @@ setInterval(() => {
   renderInventario();
   renderQuests();
   salvar();
+  sincronizarRanking();
 }, 2000);
+
+setInterval(() => {
+  sincronizarRanking();
+}, 10000);
 
 window.abrirLoja = abrirLoja;
 window.fecharLoja = fecharLoja;
@@ -818,9 +845,14 @@ window.resgatarQuest = resgatarQuest;
 window.equipar = equipar;
 window.desequipar = desequipar;
 window.vender = vender;
+window.enviarMensagemChat = enviarMensagemChat;
+window.trocarNome = trocarNome;
 
 garantirQuests();
 atualizarUI();
 renderInventario();
 renderQuests();
 salvar();
+sincronizarRanking();
+ouvirRanking();
+ouvirChat();
