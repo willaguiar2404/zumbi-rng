@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZUMBI.RNG</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1 class="titulo">ZUMBI.RNG</h1>
+
+  <div class="topo">
+    <p>Moedas: <span id="moedas">0</span></p>
+    <p>Moedas/s: <span id="renda">0</span></p>
+    <p>Giros: <span id="giros">0</span></p>
+    <p>Nível: <span id="nivel">1</span></p>
+    <p>XP: <span id="xp">0</span> / <span id="xpMeta">1000</span></p>
+
+    <div class="barraXpBox">
+      <div id="barraXp" class="barraXp"></div>
+    </div>
+
+    <div class="botoesTopo">
+      <button onclick="abrirLoja()">🛒 Loja</button>
+      <button onclick="abrirInventario()">🎒 Inventário</button>
+      <button onclick="abrirQuests()">📜 Quests</button>
+      <button onclick="equiparMelhorTime()">⚔️ Equipar Melhor Time</button>
+      <button onclick="alternarSkipAnimacao()">🎞️ Skip Animation</button>
+    </div>
+
+    <p id="statusAbrir3">Abrir 3: BLOQUEADO</p>
+    <p id="statusAutoOpen">Auto Open: BLOQUEADO</p>
+    <p id="statusSkip">Skip Animation: DESLIGADO</p>
+  </div>
+
+  <div class="cartaArea">
+    <div id="efeitoTela" class="efeitoTela"></div>
+
+    <div id="packAnimacao" class="packAnimacao">
+      <img id="cartaDisplay" src="cartas/comum1.png" alt="Carta atual" />
+    </div>
+
+    <p id="nomeCartaSorteada" class="nomeCartaSorteada">Abra um pack</p>
+
+    <div id="resultadoTriplo" class="resultadoTriplo"></div>
+  </div>
+
+  <div id="loja" class="janela">
+    <h2>Loja</h2>
+
+    <div class="botoesLoja">
+      <button onclick="abrirPack('comum')">Pack Comum (100)</button>
+      <button onclick="abrirPack('raro')">Pack Raro (800)</button>
+      <button onclick="abrirPack('epico')">Pack Épico (5000)</button>
+      <button onclick="abrirPack('lendario')">Pack Lendário (25000)</button>
+    </div>
+
+    <hr>
+
+    <div class="botoesLoja">
+      <button id="btnAbrir3" onclick="alternarAbrir3()">Comprar Abrir 3 (100K)</button>
+      <button id="btnAutoOpen" onclick="alternarAutoOpen()">Comprar Auto Open (150K)</button>
+      <button onclick="pararAbrir3()">Parar Abrir 3</button>
+      <button onclick="pararAutoOpen()">Parar Auto Open</button>
+    </div>
+
+    <br>
+
+    <button onclick="fecharLoja()">Voltar</button>
+  </div>
+
+  <div id="inventarioTela" class="janela">
+    <h2>Cartas Equipadas</h2>
+    <div id="equipadas"></div>
+
+    <hr>
+
+    <h2>Inventário</h2>
+    <div id="inventario"></div>
+
+    <br>
+
+    <button onclick="fecharInventario()">Voltar</button>
+  </div>
+
+  <div id="questsTela" class="janela">
+    <h2>Quests</h2>
+    <div id="listaQuests"></div>
+    <br>
+    <button onclick="fecharQuests()">Voltar</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

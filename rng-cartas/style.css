@@ -1,0 +1,317 @@
+body {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.90)),
+    url("fundo.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 20px;
+}
+
+.titulo {
+  font-size: 52px;
+  color: #67ff67;
+  text-shadow:
+    0 0 10px #00ff00,
+    0 0 25px #00ff00,
+    0 0 50px #00ff00;
+  margin-bottom: 25px;
+}
+
+.topo {
+  background: rgba(0, 0, 0, 0.62);
+  padding: 20px;
+  border-radius: 16px;
+  display: inline-block;
+  min-width: 320px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.45);
+}
+
+.topo p {
+  margin: 8px 0;
+  font-size: 18px;
+}
+
+.botoesTopo,
+.botoesLoja {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.barraXpBox {
+  width: 280px;
+  max-width: 90%;
+  height: 20px;
+  margin: 12px auto 18px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.barraXp {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #32ff72, #00d4ff);
+  box-shadow: 0 0 15px rgba(50, 255, 114, 0.6);
+  transition: width 0.35s ease;
+}
+
+button {
+  padding: 10px 15px;
+  margin: 5px;
+  background: #0a5;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:hover {
+  background: #0c7;
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(0, 255, 140, 0.35);
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+.cartaArea {
+  margin-top: 28px;
+  position: relative;
+}
+
+.packAnimacao {
+  display: inline-block;
+  padding: 12px;
+  border-radius: 18px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.packAnimacao img {
+  width: 220px;
+  max-width: 90vw;
+  border-radius: 12px;
+  box-shadow: 0 0 20px black;
+}
+
+.packAbrindo {
+  animation: packAbrindo 0.65s ease;
+}
+
+@keyframes packAbrindo {
+  0% {
+    transform: scale(0.75) rotateY(0deg);
+    filter: brightness(0.6) blur(2px);
+  }
+  25% {
+    transform: scale(0.9) rotateY(90deg);
+    filter: brightness(1.6);
+  }
+  50% {
+    transform: scale(1.05) rotateY(180deg);
+    filter: brightness(2);
+  }
+  75% {
+    transform: scale(1.12) rotateY(270deg);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(1) rotateY(360deg);
+    filter: brightness(1);
+  }
+}
+
+.revelada-comum { box-shadow: 0 0 18px rgba(108, 255, 108, 0.45); }
+.revelada-raro { box-shadow: 0 0 22px rgba(47, 184, 255, 0.55); }
+.revelada-epico { box-shadow: 0 0 28px rgba(208, 43, 255, 0.7); }
+.revelada-lendario { box-shadow: 0 0 34px rgba(255, 215, 0, 0.85); }
+.revelada-secreta {
+  box-shadow: 0 0 40px rgba(255, 0, 0, 0.95);
+  animation: packAbrindo 0.65s ease, pulsoSecreto 1.2s infinite alternate;
+}
+.revelada-secreta2 {
+  box-shadow: 0 0 46px rgba(255, 60, 247, 1);
+  animation: packAbrindo 0.65s ease, secreta2Pulse 1s infinite alternate;
+}
+
+@keyframes pulsoSecreto {
+  from { box-shadow: 0 0 18px rgba(255, 0, 0, 0.7); }
+  to { box-shadow: 0 0 42px rgba(255, 0, 0, 1); }
+}
+
+@keyframes secreta2Pulse {
+  from { box-shadow: 0 0 18px rgba(255, 60, 247, 0.7); }
+  to { box-shadow: 0 0 48px rgba(255, 60, 247, 1); }
+}
+
+.efeitoTela {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1;
+}
+
+.flashLendario { animation: flashLendario 0.8s ease; }
+.flashSecreta { animation: flashSecreta 1s ease; }
+
+@keyframes flashLendario {
+  0% { opacity: 0; background: rgba(255, 215, 0, 0); }
+  30% { opacity: 1; background: rgba(255, 215, 0, 0.22); }
+  100% { opacity: 0; background: rgba(255, 215, 0, 0); }
+}
+
+@keyframes flashSecreta {
+  0% { opacity: 0; background: rgba(255, 0, 0, 0); }
+  25% { opacity: 1; background: rgba(255, 0, 0, 0.2); }
+  50% { opacity: 0.8; background: rgba(255, 255, 255, 0.12); }
+  100% { opacity: 0; background: rgba(255, 0, 0, 0); }
+}
+
+.nomeCartaSorteada {
+  margin-top: 12px;
+  font-size: 22px;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+  min-height: 28px;
+}
+
+.resultadoTriplo {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.miniCarta {
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 12px;
+  padding: 8px;
+  width: 120px;
+}
+
+.miniCarta img {
+  width: 90px;
+  height: 125px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.janela {
+  display: none;
+  background: rgba(0, 0, 0, 0.76);
+  padding: 20px;
+  margin: 20px auto 0;
+  border-radius: 15px;
+  max-width: 1200px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+}
+
+#inventario,
+#equipadas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.card {
+  display: inline-block;
+  background: rgba(6, 64, 43, 0.92);
+  padding: 10px;
+  border-radius: 12px;
+  width: 145px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+
+.card img {
+  width: 100px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.card p {
+  margin: 8px 0;
+}
+
+.comum {
+  border: 2px solid #6cff6c;
+  box-shadow: 0 0 10px rgba(108, 255, 108, 0.18);
+}
+
+.raro {
+  border: 2px solid #2fb8ff;
+  box-shadow: 0 0 12px rgba(47, 184, 255, 0.24);
+}
+
+.epico {
+  border: 2px solid #d02bff;
+  box-shadow: 0 0 14px rgba(208, 43, 255, 0.34);
+}
+
+.lendario {
+  border: 2px solid gold;
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.5);
+}
+
+.secreta {
+  border: 2px solid red;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.7);
+  animation: secretaGlow 2s infinite alternate;
+}
+
+.secreta2 {
+  border: 2px solid #ff3cf7;
+  box-shadow: 0 0 26px rgba(255, 60, 247, 0.95);
+  animation: secreta2Glow 1.5s infinite alternate;
+}
+
+@keyframes secretaGlow {
+  from { box-shadow: 0 0 10px red; }
+  to { box-shadow: 0 0 35px red; }
+}
+
+@keyframes secreta2Glow {
+  from { box-shadow: 0 0 14px rgba(255, 60, 247, 0.7); }
+  to { box-shadow: 0 0 40px rgba(255, 60, 247, 1); }
+}
+
+.questBox {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 10px auto;
+  max-width: 600px;
+  text-align: left;
+}
+
+.questBox p {
+  margin: 6px 0;
+}
+
+.questPronta {
+  border-color: #32ff72;
+  box-shadow: 0 0 12px rgba(50, 255, 114, 0.2);
+}
