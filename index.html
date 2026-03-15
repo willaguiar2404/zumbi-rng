@@ -7,14 +7,27 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1 class="titulo">ZUMBI.RNG</h1>
+  <h1 class="titulo-logo">ZUMBI.RNG</h1>
 
   <div class="topo">
-    <p>Moedas: <span id="moedas">0</span></p>
-    <p>Moedas/s: <span id="renda">0</span></p>
-    <p>Giros: <span id="giros">0</span></p>
-    <p>Nível: <span id="nivel">1</span></p>
-    <p>XP: <span id="xp">0</span> / <span id="xpMeta">1000</span></p>
+    <div class="perfilJogador">
+      <p>Jogador: <span id="nomeJogador">Sem nome</span></p>
+      <p>
+        Título:
+        <span id="tituloJogador" class="badge-titulo titulo-iniciante">
+          Catador de Restos
+        </span>
+      </p>
+      <button onclick="trocarNome()">Trocar nome</button>
+    </div>
+
+    <div class="statusGrid">
+      <p>Moedas: <span id="moedas">0</span></p>
+      <p>Moedas/s: <span id="renda">0</span></p>
+      <p>Giros: <span id="giros">0</span></p>
+      <p>Nível: <span id="nivel">1</span></p>
+      <p>XP: <span id="xp">0</span> / <span id="xpMeta">1000</span></p>
+    </div>
 
     <div class="barraXpBox">
       <div id="barraXp" class="barraXp"></div>
@@ -33,16 +46,35 @@
     <p id="statusSkip">Skip Animation: DESLIGADO</p>
   </div>
 
-  <div class="cartaArea">
-    <div id="efeitoTela" class="efeitoTela"></div>
+  <div class="layoutPrincipal">
+    <main class="jogoColuna">
+      <div class="cartaArea">
+        <div id="efeitoTela" class="efeitoTela"></div>
 
-    <div id="packAnimacao" class="packAnimacao">
-      <img id="cartaDisplay" src="cartas/comum1.png" alt="Carta atual" />
-    </div>
+        <div id="packAnimacao" class="packAnimacao">
+          <img id="cartaDisplay" src="cartas/comum1.png" alt="Carta atual" />
+        </div>
 
-    <p id="nomeCartaSorteada" class="nomeCartaSorteada">Abra um pack</p>
+        <p id="nomeCartaSorteada" class="nomeCartaSorteada">Abra um pack</p>
+        <div id="resultadoTriplo" class="resultadoTriplo"></div>
+      </div>
+    </main>
 
-    <div id="resultadoTriplo" class="resultadoTriplo"></div>
+    <aside class="painelLateral">
+      <div class="painelBox">
+        <h2>🏆 Ranking</h2>
+        <div id="rankingLista"></div>
+      </div>
+
+      <div class="painelBox">
+        <h2>💬 Chat Global</h2>
+        <div id="chatMensagens" class="chatMensagens"></div>
+        <div class="chatEnviar">
+          <input id="chatInput" type="text" maxlength="140" placeholder="Digite sua mensagem..." />
+          <button onclick="enviarMensagemChat()">Enviar</button>
+        </div>
+      </div>
+    </aside>
   </div>
 
   <div id="loja" class="janela">
@@ -65,7 +97,6 @@
     </div>
 
     <br>
-
     <button onclick="fecharLoja()">Voltar</button>
   </div>
 
@@ -79,7 +110,6 @@
     <div id="inventario"></div>
 
     <br>
-
     <button onclick="fecharInventario()">Voltar</button>
   </div>
 
@@ -90,6 +120,6 @@
     <button onclick="fecharQuests()">Voltar</button>
   </div>
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
