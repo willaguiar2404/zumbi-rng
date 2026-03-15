@@ -3,6 +3,7 @@ import {
   collection,
   doc,
   setDoc,
+  getDoc,
   addDoc,
   serverTimestamp,
   query,
@@ -62,18 +63,14 @@ const cartasBase = [
   { nome: "Zumbi Soldado", raridade: "comum", moeda: 3, img: "cartas/comum2.png" },
   { nome: "Zumbi Encapuzado", raridade: "comum", moeda: 4, img: "cartas/comum3.png" },
   { nome: "Zumbi Pálido", raridade: "comum", moeda: 5, img: "cartas/comum4.png" },
-
   { nome: "Zumbi Tático", raridade: "raro", moeda: 9, img: "cartas/rara1.png" },
   { nome: "Infectado Militar", raridade: "raro", moeda: 11, img: "cartas/rara2.png" },
   { nome: "Oficial Corrompido", raridade: "raro", moeda: 14, img: "cartas/rara3.png" },
-
   { nome: "Mutante Brutal", raridade: "epico", moeda: 26, img: "cartas/epica1.png" },
   { nome: "Lobisomem Infectado", raridade: "epico", moeda: 32, img: "cartas/epica2.png" },
   { nome: "Aberração Viral", raridade: "epico", moeda: 38, img: "cartas/epica3.png" },
-
   { nome: "Rei Zumbi", raridade: "lendario", moeda: 85, img: "cartas/lendaria1.png" },
   { nome: "Titã da Praga", raridade: "lendario", moeda: 110, img: "cartas/lendaria2.png" },
-
   { nome: "Imperador Morto", raridade: "secreta", moeda: 800, img: "cartas/secreta1.png" },
   { nome: "Deus da Infecção", raridade: "secreta2", moeda: 2500, img: "cartas/secreta2.png" }
 ];
@@ -82,24 +79,15 @@ const maxEquip = 20;
 const xpPorGiro = 50;
 const precoAbrir3 = 100000;
 const precoAutoOpen = 150000;
+const precoPacks = { comum: 100, raro: 800, epico: 5000, lendario: 25000 };
 
-const precoPacks = {
-  comum: 100,
-  raro: 800,
-  epico: 5000,
-  lendario: 25000
-};
-
-const primeiroAcesso = localStorage.getItem("primeiroAcessoConcluido") !== "true";
-
-let moedas = carregarNumero("moedas", primeiroAcesso ? 500 : 0);
+let moedas = carregarNumero("moedas", 500);
 let giros = carregarNumero("giros", 0);
 let nivel = carregarNumero("nivel", 1);
 let xp = carregarNumero("xp", 0);
 
 let desbloqueouAbrir3 = localStorage.getItem("desbloqueouAbrir3") === "true";
 let desbloqueouAutoOpen = localStorage.getItem("desbloqueouAutoOpen") === "true";
-
 let abrir3Ativo = localStorage.getItem("abrir3Ativo") === "true";
 let autoOpenAtivo = localStorage.getItem("autoOpenAtivo") === "true";
 let skipAnimacao = localStorage.getItem("skipAnimacao") === "true";
@@ -114,20 +102,13 @@ if (!playerId) {
   localStorage.setItem("playerId", playerId);
 }
 
-let playerName = localStorage.getItem("playerName");
-if (!playerName) {
-  playerName = prompt("Digite seu nome de jogador:") || "Sobrevivente";
-  playerName = playerName.trim().slice(0, 20) || "Sobrevivente";
-  localStorage.setItem("playerName", playerName);
-}
+let playerName = localStorage.getItem("playerName") || "";
+let lastChatSentAt = carregarNumero("lastChatSentAt", 0);
 
-function xpNecessarioDoNivel(n) {
-  return n * 1000;
-}
-
-function bonusNivelMoeda() {
-  return 1 + (nivel - 1) * 0.05;
-}
+const palavrasBloqueadas = [
+  "fdp", "puta", "puta que pariu", "caralho", "porra", "merda",
+  "desgraça", "cu", "viado", "buceta", "arrombado"
+];
 
 function salvar() {
   localStorage.setItem("moedas", String(Number(moedas) || 0));
@@ -142,15 +123,48 @@ function salvar() {
   localStorage.setItem("inventario", JSON.stringify(inventario));
   localStorage.setItem("equipadas", JSON.stringify(equipadas));
   localStorage.setItem("quests", JSON.stringify(quests));
-  localStorage.setItem("playerName", playerName);
   localStorage.setItem("playerId", playerId);
-  localStorage.setItem("primeiroAcessoConcluido", "true");
+  localStorage.setItem("playerName", playerName);
+  localStorage.setItem("lastChatSentAt", String(lastChatSentAt));
+}
+
+function abrirAba(id, btn) {
+  document.querySelectorAll(".abaConteudo").forEach(el => el.classList.remove("ativa"));
+  document.querySelectorAll(".abaBtn").forEach(el => el.classList.remove("ativa"));
+  document.getElementById(id).classList.add("ativa");
+  if (btn) btn.classList.add("ativa");
+}
+
+function xpNecessarioDoNivel(n) {
+  return n * 1000;
+}
+
+function bonusNivelMoeda() {
+  return 1 + (nivel - 1) * 0.05;
 }
 
 function rendaTotal() {
   let total = 0;
   for (const carta of equipadas) total += Number(carta.moeda) || 0;
-  total *= bonusNivelMoeda();
+  return total * bonusNivelMoeda();
+}
+
+function contarRarasOuMelhores() {
+  let total = 0;
+  [...inventario, ...equipadas].forEach(carta => {
+    if (!carta) return;
+    if (["raro", "epico", "lendario", "secreta", "secreta2"].includes(carta.raridade)) {
+      total++;
+    }
+  });
+  return total;
+}
+
+function contarSecretasNormais() {
+  let total = 0;
+  [...inventario, ...equipadas].forEach(carta => {
+    if (carta && carta.raridade === "secreta") total++;
+  });
   return total;
 }
 
@@ -168,9 +182,7 @@ function atualizarTituloJogador() {
   const nome = document.getElementById("nomeJogador");
   const info = obterTituloJogador();
 
-  if (nome) nome.innerText = playerName;
-  if (!badge) return;
-
+  nome.innerText = playerName || "Sem nome";
   badge.innerText = info.texto;
   badge.className = "badge-titulo " + info.classe;
 }
@@ -187,59 +199,26 @@ function atualizarUI() {
   document.getElementById("xpMeta").innerText = formatar(metaXp);
   document.getElementById("barraXp").style.width = porcentagem + "%";
 
-  const statusAbrir3 = document.getElementById("statusAbrir3");
-  statusAbrir3.innerText = !desbloqueouAbrir3
+  document.getElementById("statusAbrir3").innerText = !desbloqueouAbrir3
     ? "Abrir 3: BLOQUEADO"
     : "Abrir 3: " + (abrir3Ativo ? "LIGADO" : "DESLIGADO");
 
-  const statusAutoOpen = document.getElementById("statusAutoOpen");
-  statusAutoOpen.innerText = !desbloqueouAutoOpen
+  document.getElementById("statusAutoOpen").innerText = !desbloqueouAutoOpen
     ? "Auto Open: BLOQUEADO"
     : "Auto Open: " + (autoOpenAtivo ? "LIGADO" : "DESLIGADO");
 
-  const statusSkip = document.getElementById("statusSkip");
-  statusSkip.innerText = "Skip Animation: " + (skipAnimacao ? "LIGADO" : "DESLIGADO");
+  document.getElementById("statusSkip").innerText =
+    "Skip Animation: " + (skipAnimacao ? "LIGADO" : "DESLIGADO");
 
-  const btnAbrir3 = document.getElementById("btnAbrir3");
-  btnAbrir3.innerText = !desbloqueouAbrir3
+  document.getElementById("btnAbrir3").innerText = !desbloqueouAbrir3
     ? `Comprar Abrir 3 (${formatar(precoAbrir3)})`
     : abrir3Ativo ? "Desligar Abrir 3" : "Ligar Abrir 3";
 
-  const btnAutoOpen = document.getElementById("btnAutoOpen");
-  btnAutoOpen.innerText = !desbloqueouAutoOpen
+  document.getElementById("btnAutoOpen").innerText = !desbloqueouAutoOpen
     ? `Comprar Auto Open (${formatar(precoAutoOpen)})`
     : autoOpenAtivo ? "Desligar Auto Open" : "Ligar Auto Open";
 
   atualizarTituloJogador();
-}
-
-function abrirLoja() {
-  document.getElementById("loja").style.display = "block";
-}
-function fecharLoja() {
-  document.getElementById("loja").style.display = "none";
-}
-function abrirInventario() {
-  document.getElementById("inventarioTela").style.display = "block";
-  renderInventario();
-}
-function fecharInventario() {
-  document.getElementById("inventarioTela").style.display = "none";
-}
-function abrirQuests() {
-  document.getElementById("questsTela").style.display = "block";
-  renderQuests();
-}
-function fecharQuests() {
-  document.getElementById("questsTela").style.display = "none";
-}
-function trocarNome() {
-  const novo = prompt("Novo nome do jogador:", playerName);
-  if (!novo) return;
-  playerName = novo.trim().slice(0, 20) || playerName;
-  salvar();
-  atualizarUI();
-  sincronizarRanking();
 }
 
 function rolarRaridade(tipo) {
@@ -280,8 +259,7 @@ function rolarRaridade(tipo) {
 function gerarCarta(tipo) {
   const raridade = rolarRaridade(tipo);
   const pool = cartasBase.filter(c => c.raridade === raridade);
-  const base = pool[Math.floor(Math.random() * pool.length)];
-  return clonarCarta(base || cartasBase[0]);
+  return clonarCarta(pool[Math.floor(Math.random() * pool.length)] || cartasBase[0]);
 }
 
 function gerarCartaPorRaridade(raridade) {
@@ -413,6 +391,7 @@ function abrirPack(tipo) {
     alert("Moedas insuficientes");
     return;
   }
+
   atualizarUI();
   renderInventario();
   renderQuests();
@@ -426,13 +405,15 @@ function alternarAbrir3() {
       alert("Moedas insuficientes para comprar Abrir 3 Packs");
       return;
     }
+
     moedas -= precoAbrir3;
     desbloqueouAbrir3 = true;
     abrir3Ativo = false;
+
     atualizarUI();
     salvar();
-    alert("✅ Você comprou Abrir 3 Packs para sempre!");
     sincronizarRanking();
+    alert("✅ Você comprou Abrir 3 Packs para sempre!");
     return;
   }
 
@@ -456,13 +437,15 @@ function alternarAutoOpen() {
       alert("Moedas insuficientes para comprar Auto Open");
       return;
     }
+
     moedas -= precoAutoOpen;
     desbloqueouAutoOpen = true;
     autoOpenAtivo = false;
+
     atualizarUI();
     salvar();
-    alert("✅ Você comprou Auto Open para sempre!");
     sincronizarRanking();
+    alert("✅ Você comprou Auto Open para sempre!");
     return;
   }
 
@@ -498,14 +481,6 @@ function equiparMelhorTime() {
   renderInventario();
   salvar();
   sincronizarRanking();
-}
-
-function contarSecretasNormais() {
-  let total = 0;
-  [...inventario, ...equipadas].forEach(carta => {
-    if (carta && carta.raridade === "secreta") total++;
-  });
-  return total;
 }
 
 function criarQuests() {
@@ -553,7 +528,6 @@ function resgatarQuest(id) {
   renderQuests();
   salvar();
   sincronizarRanking();
-
   alert("Quest resgatada com sucesso!");
 }
 
@@ -603,7 +577,6 @@ function renderInventario() {
     const valorVenda = (Number(c.moeda) || 0) * 20;
     const card = document.createElement("div");
     card.className = "card " + c.raridade;
-
     card.innerHTML = `
       <img src="${c.img}" alt="${c.nome}">
       <p><b>${c.nome}</b></p>
@@ -618,7 +591,6 @@ function renderInventario() {
   equipadas.forEach((c, i) => {
     const card = document.createElement("div");
     card.className = "card " + c.raridade;
-
     card.innerHTML = `
       <img src="${c.img}" alt="${c.nome}">
       <p><b>${c.nome}</b></p>
@@ -645,7 +617,6 @@ function equipar(i) {
   equipadas.push(carta);
   inventario.splice(i, 1);
 
-  atualizarUI();
   renderInventario();
   salvar();
   sincronizarRanking();
@@ -653,13 +624,13 @@ function equipar(i) {
 
 function desequipar(i) {
   if (i < 0 || i >= equipadas.length) return;
+
   const carta = normalizarCarta(equipadas[i]);
   if (!carta) return;
 
   inventario.push(carta);
   equipadas.splice(i, 1);
 
-  atualizarUI();
   renderInventario();
   salvar();
   sincronizarRanking();
@@ -667,17 +638,63 @@ function desequipar(i) {
 
 function vender(i) {
   if (i < 0 || i >= inventario.length) return;
+
   const carta = normalizarCarta(inventario[i]);
   if (!carta) return;
 
   moedas += (Number(carta.moeda) || 0) * 20;
   inventario.splice(i, 1);
 
-  atualizarUI();
   renderInventario();
   renderQuests();
   salvar();
   sincronizarRanking();
+}
+
+async function garantirNomeUnico(nomeDesejado) {
+  const nomeLimpo = nomeDesejado.trim().slice(0, 20);
+  if (!nomeLimpo) return { ok: false, mensagem: "Nome inválido." };
+
+  const nomeId = nomeLimpo.toLowerCase();
+  const nomeRef = doc(db, "usernames", nomeId);
+  const nomeSnap = await getDoc(nomeRef);
+
+  if (!nomeSnap.exists()) {
+    await setDoc(nomeRef, { playerId, displayName: nomeLimpo });
+    return { ok: true, nomeFinal: nomeLimpo };
+  }
+
+  const dono = nomeSnap.data()?.playerId;
+  if (dono === playerId) {
+    return { ok: true, nomeFinal: nomeLimpo };
+  }
+
+  return { ok: false, mensagem: "Esse nome já está em uso." };
+}
+
+async function trocarNome() {
+  const novo = prompt("Novo nome do jogador:", playerName || "Sobrevivente");
+  if (!novo) return;
+
+  try {
+    const resultado = await garantirNomeUnico(novo);
+    if (!resultado.ok) {
+      alert(resultado.mensagem);
+      return;
+    }
+
+    playerName = resultado.nomeFinal;
+    salvar();
+    atualizarUI();
+    sincronizarRanking();
+  } catch {
+    alert("Não foi possível trocar o nome agora.");
+  }
+}
+
+function textoTemPalavraBloqueada(texto) {
+  const t = texto.toLowerCase();
+  return palavrasBloqueadas.some(p => t.includes(p));
 }
 
 async function sincronizarRanking() {
@@ -685,10 +702,12 @@ async function sincronizarRanking() {
     const titulo = obterTituloJogador();
     await setDoc(doc(db, "players", playerId), {
       playerId,
-      name: playerName,
+      name: playerName || "Sobrevivente",
       giros,
       nivel,
+      moedas,
       renda: Math.floor(rendaTotal()),
+      raras: contarRarasOuMelhores(),
       titulo: titulo.texto,
       updatedAt: Date.now()
     }, { merge: true });
@@ -697,25 +716,30 @@ async function sincronizarRanking() {
   }
 }
 
-function ouvirRanking() {
-  const q = query(collection(db, "players"), orderBy("giros", "desc"), limit(10));
-  onSnapshot(q, snapshot => {
-    const lista = document.getElementById("rankingLista");
-    lista.innerHTML = "";
+function renderRankingLista(elementId, docs, campo) {
+  const lista = document.getElementById(elementId);
+  lista.innerHTML = "";
 
-    let pos = 0;
-    snapshot.forEach(docSnap => {
-      pos++;
-      const item = docSnap.data();
-      const div = document.createElement("div");
-      div.className = "rankingItem" + (pos <= 3 ? ` rankingTop${pos}` : "");
-      div.innerHTML = `
-        <b>#${pos} ${item.name || "Jogador"}</b><br>
-        <small>${item.titulo || "Sem título"}</small><br>
-        Giros: ${formatar(item.giros || 0)} | Nível: ${formatar(item.nivel || 1)}
-      `;
-      lista.appendChild(div);
-    });
+  let pos = 0;
+  docs.forEach(item => {
+    pos++;
+    const div = document.createElement("div");
+    div.className = "rankingItem" + (pos <= 3 ? ` rankingTop${pos}` : "");
+    div.innerHTML = `
+      <b>#${pos} ${item.name || "Jogador"}</b><br>
+      <small>${item.titulo || "Sem título"}</small><br>
+      ${campo}: ${formatar(item[elementId === "rankingRaras" ? "raras" : elementId === "rankingMoedas" ? "moedas" : elementId === "rankingNivel" ? "nivel" : "giros"] || 0)}
+    `;
+    lista.appendChild(div);
+  });
+}
+
+function ouvirRankingColecao(elementId, campoFirestore) {
+  const q = query(collection(db, "players"), orderBy(campoFirestore, "desc"), limit(10));
+  onSnapshot(q, snapshot => {
+    const docs = [];
+    snapshot.forEach(s => docs.push(s.data()));
+    renderRankingLista(elementId, docs, campoFirestore);
   });
 }
 
@@ -724,17 +748,35 @@ async function enviarMensagemChat() {
   const texto = (input.value || "").trim();
   if (!texto) return;
 
+  const agora = Date.now();
+  if (agora - lastChatSentAt < 4000) {
+    alert("Espere alguns segundos para mandar outra mensagem.");
+    return;
+  }
+
+  if (texto.length < 2) {
+    alert("Mensagem muito curta.");
+    return;
+  }
+
+  if (textoTemPalavraBloqueada(texto)) {
+    alert("Mensagem bloqueada por conteúdo inadequado.");
+    return;
+  }
+
   try {
     await addDoc(collection(db, "chat"), {
-      name: playerName,
+      name: playerName || "Sobrevivente",
       titulo: obterTituloJogador().texto,
       text: texto.slice(0, 140),
       createdAt: serverTimestamp(),
-      createdAtMs: Date.now()
+      createdAtMs: agora
     });
+
+    lastChatSentAt = agora;
+    salvar();
     input.value = "";
-  } catch (e) {
-    console.error("Erro ao enviar mensagem:", e);
+  } catch {
     alert("Não foi possível enviar a mensagem.");
   }
 }
@@ -762,8 +804,11 @@ function ouvirChat() {
   });
 }
 
-document.getElementById("chatInput")?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") enviarMensagemChat();
+document.addEventListener("keydown", (e) => {
+  const input = document.getElementById("chatInput");
+  if (document.activeElement === input && e.key === "Enter") {
+    enviarMensagemChat();
+  }
 });
 
 setInterval(() => {
@@ -802,8 +847,8 @@ setInterval(() => {
   }
 
   moedas -= precoUso;
-
   const cartasAbertas = [];
+
   for (let i = 0; i < 3; i++) {
     giros += 1;
     ganharXp(xpPorGiro);
@@ -828,12 +873,36 @@ setInterval(() => {
   sincronizarRanking();
 }, 10000);
 
-window.abrirLoja = abrirLoja;
-window.fecharLoja = fecharLoja;
-window.abrirInventario = abrirInventario;
-window.fecharInventario = fecharInventario;
-window.abrirQuests = abrirQuests;
-window.fecharQuests = fecharQuests;
+async function inicializarNomeJogador() {
+  if (playerName) {
+    const resultado = await garantirNomeUnico(playerName).catch(() => null);
+    if (resultado?.ok) {
+      playerName = resultado.nomeFinal;
+      salvar();
+      return;
+    }
+  }
+
+  while (!playerName) {
+    const nome = prompt("Digite seu nome de jogador (único):") || "";
+    if (!nome.trim()) continue;
+
+    try {
+      const resultado = await garantirNomeUnico(nome);
+      if (resultado.ok) {
+        playerName = resultado.nomeFinal;
+        salvar();
+        break;
+      } else {
+        alert(resultado.mensagem);
+      }
+    } catch {
+      alert("Erro ao validar nome. Tente de novo.");
+    }
+  }
+}
+
+window.abrirAba = abrirAba;
 window.abrirPack = abrirPack;
 window.alternarAbrir3 = alternarAbrir3;
 window.pararAbrir3 = pararAbrir3;
@@ -848,11 +917,22 @@ window.vender = vender;
 window.enviarMensagemChat = enviarMensagemChat;
 window.trocarNome = trocarNome;
 
-garantirQuests();
-atualizarUI();
-renderInventario();
-renderQuests();
-salvar();
-sincronizarRanking();
-ouvirRanking();
-ouvirChat();
+function garantirQuests() {
+  if (!Array.isArray(quests) || quests.length === 0) quests = criarQuests();
+}
+
+(async function iniciar() {
+  garantirQuests();
+  await inicializarNomeJogador();
+  atualizarUI();
+  renderInventario();
+  renderQuests();
+  salvar();
+  sincronizarRanking();
+
+  ouvirRankingColecao("rankingGiros", "giros");
+  ouvirRankingColecao("rankingNivel", "nivel");
+  ouvirRankingColecao("rankingMoedas", "moedas");
+  ouvirRankingColecao("rankingRaras", "raras");
+  ouvirChat();
+})();
