@@ -9,14 +9,12 @@
 <body>
   <h1 class="titulo-logo">ZUMBI.RNG</h1>
 
-  <div class="topo">
+  <div class="topoInfo">
     <div class="perfilJogador">
       <p>Jogador: <span id="nomeJogador">Sem nome</span></p>
       <p>
         Título:
-        <span id="tituloJogador" class="badge-titulo titulo-iniciante">
-          Catador de Restos
-        </span>
+        <span id="tituloJogador" class="badge-titulo titulo-iniciante">Catador de Restos</span>
       </p>
       <button onclick="trocarNome()">Trocar nome</button>
     </div>
@@ -32,22 +30,18 @@
     <div class="barraXpBox">
       <div id="barraXp" class="barraXp"></div>
     </div>
-
-    <div class="botoesTopo">
-      <button onclick="abrirLoja()">🛒 Loja</button>
-      <button onclick="abrirInventario()">🎒 Inventário</button>
-      <button onclick="abrirQuests()">📜 Quests</button>
-      <button onclick="equiparMelhorTime()">⚔️ Equipar Melhor Time</button>
-      <button onclick="alternarSkipAnimacao()">🎞️ Skip Animation</button>
-    </div>
-
-    <p id="statusAbrir3">Abrir 3: BLOQUEADO</p>
-    <p id="statusAutoOpen">Auto Open: BLOQUEADO</p>
-    <p id="statusSkip">Skip Animation: DESLIGADO</p>
   </div>
 
-  <div class="layoutPrincipal">
-    <main class="jogoColuna">
+  <div class="abasTopo">
+    <button class="abaBtn ativa" onclick="abrirAba('abaGiros', this)">Giros</button>
+    <button class="abaBtn" onclick="abrirAba('abaLoja', this)">Loja</button>
+    <button class="abaBtn" onclick="abrirAba('abaInventario', this)">Inventário</button>
+    <button class="abaBtn" onclick="abrirAba('abaBoost', this)">Boost</button>
+    <button class="abaBtn" onclick="abrirAba('abaRanking', this)">Ranking</button>
+  </div>
+
+  <section id="abaGiros" class="abaConteudo ativa">
+    <div class="painelCentral">
       <div class="cartaArea">
         <div id="efeitoTela" class="efeitoTela"></div>
 
@@ -58,15 +52,79 @@
         <p id="nomeCartaSorteada" class="nomeCartaSorteada">Abra um pack</p>
         <div id="resultadoTriplo" class="resultadoTriplo"></div>
       </div>
-    </main>
+    </div>
+  </section>
 
-    <aside class="painelLateral">
+  <section id="abaLoja" class="abaConteudo">
+    <div class="painelBox">
+      <h2>Loja</h2>
+      <div class="botoesLoja">
+        <button onclick="abrirPack('comum')">Pack Comum (100)</button>
+        <button onclick="abrirPack('raro')">Pack Raro (800)</button>
+        <button onclick="abrirPack('epico')">Pack Épico (5000)</button>
+        <button onclick="abrirPack('lendario')">Pack Lendário (25000)</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="abaInventario" class="abaConteudo">
+    <div class="painelBox">
+      <h2>Cartas Equipadas</h2>
+      <div id="equipadas"></div>
+
+      <hr>
+
+      <h2>Minhas Cartas</h2>
+      <div id="inventario"></div>
+
+      <hr>
+
+      <h2>Quests</h2>
+      <div id="listaQuests"></div>
+    </div>
+  </section>
+
+  <section id="abaBoost" class="abaConteudo">
+    <div class="painelBox">
+      <h2>Boosts</h2>
+      <div class="botoesLoja">
+        <button id="btnAbrir3" onclick="alternarAbrir3()">Comprar Abrir 3 (100K)</button>
+        <button id="btnAutoOpen" onclick="alternarAutoOpen()">Comprar Auto Open (150K)</button>
+        <button onclick="pararAbrir3()">Parar Abrir 3</button>
+        <button onclick="pararAutoOpen()">Parar Auto Open</button>
+        <button onclick="equiparMelhorTime()">Equipar Melhor Time</button>
+        <button onclick="alternarSkipAnimacao()">Skip Animation</button>
+      </div>
+
+      <p id="statusAbrir3">Abrir 3: BLOQUEADO</p>
+      <p id="statusAutoOpen">Auto Open: BLOQUEADO</p>
+      <p id="statusSkip">Skip Animation: DESLIGADO</p>
+    </div>
+  </section>
+
+  <section id="abaRanking" class="abaConteudo">
+    <div class="layoutRanking">
       <div class="painelBox">
-        <h2>🏆 Ranking</h2>
-        <div id="rankingLista"></div>
+        <h2>🏆 Ranking por Giros</h2>
+        <div id="rankingGiros"></div>
       </div>
 
       <div class="painelBox">
+        <h2>⭐ Ranking por Nível</h2>
+        <div id="rankingNivel"></div>
+      </div>
+
+      <div class="painelBox">
+        <h2>💰 Ranking por Moedas</h2>
+        <div id="rankingMoedas"></div>
+      </div>
+
+      <div class="painelBox">
+        <h2>🧬 Ranking por Cartas Raras</h2>
+        <div id="rankingRaras"></div>
+      </div>
+
+      <div class="painelBox painelChat">
         <h2>💬 Chat Global</h2>
         <div id="chatMensagens" class="chatMensagens"></div>
         <div class="chatEnviar">
@@ -74,51 +132,8 @@
           <button onclick="enviarMensagemChat()">Enviar</button>
         </div>
       </div>
-    </aside>
-  </div>
-
-  <div id="loja" class="janela">
-    <h2>Loja</h2>
-
-    <div class="botoesLoja">
-      <button onclick="abrirPack('comum')">Pack Comum (100)</button>
-      <button onclick="abrirPack('raro')">Pack Raro (800)</button>
-      <button onclick="abrirPack('epico')">Pack Épico (5000)</button>
-      <button onclick="abrirPack('lendario')">Pack Lendário (25000)</button>
     </div>
-
-    <hr>
-
-    <div class="botoesLoja">
-      <button id="btnAbrir3" onclick="alternarAbrir3()">Comprar Abrir 3 (100K)</button>
-      <button id="btnAutoOpen" onclick="alternarAutoOpen()">Comprar Auto Open (150K)</button>
-      <button onclick="pararAbrir3()">Parar Abrir 3</button>
-      <button onclick="pararAutoOpen()">Parar Auto Open</button>
-    </div>
-
-    <br>
-    <button onclick="fecharLoja()">Voltar</button>
-  </div>
-
-  <div id="inventarioTela" class="janela">
-    <h2>Cartas Equipadas</h2>
-    <div id="equipadas"></div>
-
-    <hr>
-
-    <h2>Inventário</h2>
-    <div id="inventario"></div>
-
-    <br>
-    <button onclick="fecharInventario()">Voltar</button>
-  </div>
-
-  <div id="questsTela" class="janela">
-    <h2>Quests</h2>
-    <div id="listaQuests"></div>
-    <br>
-    <button onclick="fecharQuests()">Voltar</button>
-  </div>
+  </section>
 
   <script type="module" src="script.js"></script>
 </body>
