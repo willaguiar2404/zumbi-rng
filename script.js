@@ -1,17 +1,3 @@
-import {
-  db,
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  addDoc,
-  serverTimestamp,
-  query,
-  orderBy,
-  limit,
-  onSnapshot
-} from "./firebase-config.js";
-
 function formatar(n) {
   n = Number(n) || 0;
   if (n >= 1e12) return (n / 1e12).toFixed(1) + "T";
@@ -63,14 +49,18 @@ const cartasBase = [
   { nome: "Zumbi Soldado", raridade: "comum", moeda: 3, img: "cartas/comum2.png" },
   { nome: "Zumbi Encapuzado", raridade: "comum", moeda: 4, img: "cartas/comum3.png" },
   { nome: "Zumbi Pálido", raridade: "comum", moeda: 5, img: "cartas/comum4.png" },
+
   { nome: "Zumbi Tático", raridade: "raro", moeda: 9, img: "cartas/rara1.png" },
   { nome: "Infectado Militar", raridade: "raro", moeda: 11, img: "cartas/rara2.png" },
   { nome: "Oficial Corrompido", raridade: "raro", moeda: 14, img: "cartas/rara3.png" },
+
   { nome: "Mutante Brutal", raridade: "epico", moeda: 26, img: "cartas/epica1.png" },
   { nome: "Lobisomem Infectado", raridade: "epico", moeda: 32, img: "cartas/epica2.png" },
   { nome: "Aberração Viral", raridade: "epico", moeda: 38, img: "cartas/epica3.png" },
+
   { nome: "Rei Zumbi", raridade: "lendario", moeda: 85, img: "cartas/lendaria1.png" },
   { nome: "Titã da Praga", raridade: "lendario", moeda: 110, img: "cartas/lendaria2.png" },
+
   { nome: "Imperador Morto", raridade: "secreta", moeda: 800, img: "cartas/secreta1.png" },
   { nome: "Deus da Infecção", raridade: "secreta2", moeda: 2500, img: "cartas/secreta2.png" }
 ];
@@ -79,7 +69,17 @@ const maxEquip = 20;
 const xpPorGiro = 50;
 const precoAbrir3 = 100000;
 const precoAutoOpen = 150000;
-const precoPacks = { comum: 100, raro: 800, epico: 5000, lendario: 25000 };
+
+const precoPacks = {
+  comum: 100,
+  raro: 800,
+  epico: 5000,
+  lendario: 25000
+};
+
+if (localStorage.getItem("moedas") === null) {
+  localStorage.setItem("moedas", "500");
+}
 
 let moedas = carregarNumero("moedas", 500);
 let giros = carregarNumero("giros", 0);
@@ -96,19 +96,7 @@ let inventario = carregarCartas("inventario");
 let equipadas = carregarCartas("equipadas");
 let quests = JSON.parse(localStorage.getItem("quests")) || null;
 
-let playerId = localStorage.getItem("playerId");
-if (!playerId) {
-  playerId = crypto.randomUUID ? crypto.randomUUID() : "player_" + Math.random().toString(36).slice(2);
-  localStorage.setItem("playerId", playerId);
-}
-
-let playerName = localStorage.getItem("playerName") || "";
-let lastChatSentAt = carregarNumero("lastChatSentAt", 0);
-
-const palavrasBloqueadas = [
-  "fdp", "puta", "puta que pariu", "caralho", "porra", "merda",
-  "desgraça", "cu", "viado", "buceta", "arrombado"
-];
+let playerName = localStorage.getItem("playerName") || "Sobrevivente";
 
 function salvar() {
   localStorage.setItem("moedas", String(Number(moedas) || 0));
@@ -123,9 +111,7 @@ function salvar() {
   localStorage.setItem("inventario", JSON.stringify(inventario));
   localStorage.setItem("equipadas", JSON.stringify(equipadas));
   localStorage.setItem("quests", JSON.stringify(quests));
-  localStorage.setItem("playerId", playerId);
   localStorage.setItem("playerName", playerName);
-  localStorage.setItem("lastChatSentAt", String(lastChatSentAt));
 }
 
 function abrirAba(id, btn) {
@@ -145,7 +131,9 @@ function bonusNivelMoeda() {
 
 function rendaTotal() {
   let total = 0;
-  for (const carta of equipadas) total += Number(carta.moeda) || 0;
+  for (const carta of equipadas) {
+    total += Number(carta.moeda) || 0;
+  }
   return total * bonusNivelMoeda();
 }
 
@@ -182,7 +170,7 @@ function atualizarTituloJogador() {
   const nome = document.getElementById("nomeJogador");
   const info = obterTituloJogador();
 
-  nome.innerText = playerName || "Sem nome";
+  nome.innerText = playerName;
   badge.innerText = info.texto;
   badge.className = "badge-titulo " + info.classe;
 }
@@ -219,6 +207,15 @@ function atualizarUI() {
     : autoOpenAtivo ? "Desligar Auto Open" : "Ligar Auto Open";
 
   atualizarTituloJogador();
+  renderRankingsLocais();
+}
+
+function trocarNome() {
+  const novo = prompt("Novo nome do jogador:", playerName);
+  if (!novo) return;
+  playerName = novo.trim().slice(0, 20) || playerName;
+  salvar();
+  atualizarUI();
 }
 
 function rolarRaridade(tipo) {
@@ -396,7 +393,6 @@ function abrirPack(tipo) {
   renderInventario();
   renderQuests();
   salvar();
-  sincronizarRanking();
 }
 
 function alternarAbrir3() {
@@ -412,7 +408,6 @@ function alternarAbrir3() {
 
     atualizarUI();
     salvar();
-    sincronizarRanking();
     alert("✅ Você comprou Abrir 3 Packs para sempre!");
     return;
   }
@@ -444,7 +439,6 @@ function alternarAutoOpen() {
 
     atualizarUI();
     salvar();
-    sincronizarRanking();
     alert("✅ Você comprou Auto Open para sempre!");
     return;
   }
@@ -480,7 +474,7 @@ function equiparMelhorTime() {
 
   renderInventario();
   salvar();
-  sincronizarRanking();
+  atualizarUI();
 }
 
 function criarQuests() {
@@ -515,7 +509,7 @@ function resgatarQuest(id) {
 
   moedas += Number(quest.recompensaMoedas) || 0;
 
-  if (quest.recompensaCarta?.raridade) {
+  if (quest.recompensaCarta && quest.recompensaCarta.raridade) {
     const cartaPremio = gerarCartaPorRaridade(quest.recompensaCarta.raridade);
     inventario.push(cartaPremio);
     tocarAnimacaoCarta(cartaPremio);
@@ -527,7 +521,6 @@ function resgatarQuest(id) {
   renderInventario();
   renderQuests();
   salvar();
-  sincronizarRanking();
   alert("Quest resgatada com sucesso!");
 }
 
@@ -544,7 +537,7 @@ function renderQuests() {
     box.className = "questBox" + (pronta && !quest.resgatada ? " questPronta" : "");
 
     let recompensaTexto = `Moedas: ${formatar(quest.recompensaMoedas)}`;
-    if (quest.recompensaCarta?.raridade) {
+    if (quest.recompensaCarta && quest.recompensaCarta.raridade) {
       recompensaTexto += ` + Carta ${quest.recompensaCarta.raridade.toUpperCase()}`;
     }
 
@@ -575,6 +568,7 @@ function renderInventario() {
 
   inventario.forEach((c, i) => {
     const valorVenda = (Number(c.moeda) || 0) * 20;
+
     const card = document.createElement("div");
     card.className = "card " + c.raridade;
     card.innerHTML = `
@@ -619,7 +613,6 @@ function equipar(i) {
 
   renderInventario();
   salvar();
-  sincronizarRanking();
 }
 
 function desequipar(i) {
@@ -633,7 +626,6 @@ function desequipar(i) {
 
   renderInventario();
   salvar();
-  sincronizarRanking();
 }
 
 function vender(i) {
@@ -648,168 +640,28 @@ function vender(i) {
   renderInventario();
   renderQuests();
   salvar();
-  sincronizarRanking();
 }
 
-async function garantirNomeUnico(nomeDesejado) {
-  const nomeLimpo = nomeDesejado.trim().slice(0, 20);
-  if (!nomeLimpo) return { ok: false, mensagem: "Nome inválido." };
+function renderRankingsLocais() {
+  document.getElementById("rankingGiros").innerHTML = `
+    <div class="rankingItem"><b>${playerName}</b><br>Giros totais: ${formatar(giros)}</div>
+  `;
 
-  const nomeId = nomeLimpo.toLowerCase();
-  const nomeRef = doc(db, "usernames", nomeId);
-  const nomeSnap = await getDoc(nomeRef);
+  document.getElementById("rankingNivel").innerHTML = `
+    <div class="rankingItem"><b>Nível atual</b><br>${formatar(nivel)}</div>
+    <div class="rankingItem"><b>XP atual</b><br>${formatar(xp)} / ${formatar(xpNecessarioDoNivel(nivel))}</div>
+  `;
 
-  if (!nomeSnap.exists()) {
-    await setDoc(nomeRef, { playerId, displayName: nomeLimpo });
-    return { ok: true, nomeFinal: nomeLimpo };
-  }
+  document.getElementById("rankingMoedas").innerHTML = `
+    <div class="rankingItem"><b>Moedas</b><br>${formatar(moedas)}</div>
+    <div class="rankingItem"><b>Moedas/s</b><br>${formatar(rendaTotal())}</div>
+  `;
 
-  const dono = nomeSnap.data()?.playerId;
-  if (dono === playerId) {
-    return { ok: true, nomeFinal: nomeLimpo };
-  }
-
-  return { ok: false, mensagem: "Esse nome já está em uso." };
+  document.getElementById("rankingRaras").innerHTML = `
+    <div class="rankingItem"><b>Cartas raras ou melhores</b><br>${formatar(contarRarasOuMelhores())}</div>
+    <div class="rankingItem"><b>Cartas secretas</b><br>${formatar(contarSecretasNormais())}</div>
+  `;
 }
-
-async function trocarNome() {
-  const novo = prompt("Novo nome do jogador:", playerName || "Sobrevivente");
-  if (!novo) return;
-
-  try {
-    const resultado = await garantirNomeUnico(novo);
-    if (!resultado.ok) {
-      alert(resultado.mensagem);
-      return;
-    }
-
-    playerName = resultado.nomeFinal;
-    salvar();
-    atualizarUI();
-    sincronizarRanking();
-  } catch {
-    alert("Não foi possível trocar o nome agora.");
-  }
-}
-
-function textoTemPalavraBloqueada(texto) {
-  const t = texto.toLowerCase();
-  return palavrasBloqueadas.some(p => t.includes(p));
-}
-
-async function sincronizarRanking() {
-  try {
-    const titulo = obterTituloJogador();
-    await setDoc(doc(db, "players", playerId), {
-      playerId,
-      name: playerName || "Sobrevivente",
-      giros,
-      nivel,
-      moedas,
-      renda: Math.floor(rendaTotal()),
-      raras: contarRarasOuMelhores(),
-      titulo: titulo.texto,
-      updatedAt: Date.now()
-    }, { merge: true });
-  } catch (e) {
-    console.error("Erro ao sincronizar ranking:", e);
-  }
-}
-
-function renderRankingLista(elementId, docs, campo) {
-  const lista = document.getElementById(elementId);
-  lista.innerHTML = "";
-
-  let pos = 0;
-  docs.forEach(item => {
-    pos++;
-    const div = document.createElement("div");
-    div.className = "rankingItem" + (pos <= 3 ? ` rankingTop${pos}` : "");
-    div.innerHTML = `
-      <b>#${pos} ${item.name || "Jogador"}</b><br>
-      <small>${item.titulo || "Sem título"}</small><br>
-      ${campo}: ${formatar(item[elementId === "rankingRaras" ? "raras" : elementId === "rankingMoedas" ? "moedas" : elementId === "rankingNivel" ? "nivel" : "giros"] || 0)}
-    `;
-    lista.appendChild(div);
-  });
-}
-
-function ouvirRankingColecao(elementId, campoFirestore) {
-  const q = query(collection(db, "players"), orderBy(campoFirestore, "desc"), limit(10));
-  onSnapshot(q, snapshot => {
-    const docs = [];
-    snapshot.forEach(s => docs.push(s.data()));
-    renderRankingLista(elementId, docs, campoFirestore);
-  });
-}
-
-async function enviarMensagemChat() {
-  const input = document.getElementById("chatInput");
-  const texto = (input.value || "").trim();
-  if (!texto) return;
-
-  const agora = Date.now();
-  if (agora - lastChatSentAt < 4000) {
-    alert("Espere alguns segundos para mandar outra mensagem.");
-    return;
-  }
-
-  if (texto.length < 2) {
-    alert("Mensagem muito curta.");
-    return;
-  }
-
-  if (textoTemPalavraBloqueada(texto)) {
-    alert("Mensagem bloqueada por conteúdo inadequado.");
-    return;
-  }
-
-  try {
-    await addDoc(collection(db, "chat"), {
-      name: playerName || "Sobrevivente",
-      titulo: obterTituloJogador().texto,
-      text: texto.slice(0, 140),
-      createdAt: serverTimestamp(),
-      createdAtMs: agora
-    });
-
-    lastChatSentAt = agora;
-    salvar();
-    input.value = "";
-  } catch {
-    alert("Não foi possível enviar a mensagem.");
-  }
-}
-
-function ouvirChat() {
-  const q = query(collection(db, "chat"), orderBy("createdAtMs", "desc"), limit(30));
-  onSnapshot(q, snapshot => {
-    const box = document.getElementById("chatMensagens");
-    box.innerHTML = "";
-
-    const docs = [];
-    snapshot.forEach(s => docs.push(s.data()));
-    docs.reverse().forEach(msg => {
-      const div = document.createElement("div");
-      div.className = "chatMsg";
-      div.innerHTML = `
-        <b>${msg.name || "Jogador"}</b>
-        <small> • ${msg.titulo || "Sem título"}</small><br>
-        ${msg.text || ""}
-      `;
-      box.appendChild(div);
-    });
-
-    box.scrollTop = box.scrollHeight;
-  });
-}
-
-document.addEventListener("keydown", (e) => {
-  const input = document.getElementById("chatInput");
-  if (document.activeElement === input && e.key === "Enter") {
-    enviarMensagemChat();
-  }
-});
 
 setInterval(() => {
   moedas += rendaTotal();
@@ -831,7 +683,6 @@ setInterval(() => {
   renderInventario();
   renderQuests();
   salvar();
-  sincronizarRanking();
 }, 1500);
 
 setInterval(() => {
@@ -866,41 +717,7 @@ setInterval(() => {
   renderInventario();
   renderQuests();
   salvar();
-  sincronizarRanking();
 }, 2000);
-
-setInterval(() => {
-  sincronizarRanking();
-}, 10000);
-
-async function inicializarNomeJogador() {
-  if (playerName) {
-    const resultado = await garantirNomeUnico(playerName).catch(() => null);
-    if (resultado?.ok) {
-      playerName = resultado.nomeFinal;
-      salvar();
-      return;
-    }
-  }
-
-  while (!playerName) {
-    const nome = prompt("Digite seu nome de jogador (único):") || "";
-    if (!nome.trim()) continue;
-
-    try {
-      const resultado = await garantirNomeUnico(nome);
-      if (resultado.ok) {
-        playerName = resultado.nomeFinal;
-        salvar();
-        break;
-      } else {
-        alert(resultado.mensagem);
-      }
-    } catch {
-      alert("Erro ao validar nome. Tente de novo.");
-    }
-  }
-}
 
 window.abrirAba = abrirAba;
 window.abrirPack = abrirPack;
@@ -914,25 +731,10 @@ window.resgatarQuest = resgatarQuest;
 window.equipar = equipar;
 window.desequipar = desequipar;
 window.vender = vender;
-window.enviarMensagemChat = enviarMensagemChat;
 window.trocarNome = trocarNome;
 
-function garantirQuests() {
-  if (!Array.isArray(quests) || quests.length === 0) quests = criarQuests();
-}
-
-(async function iniciar() {
-  garantirQuests();
-  await inicializarNomeJogador();
-  atualizarUI();
-  renderInventario();
-  renderQuests();
-  salvar();
-  sincronizarRanking();
-
-  ouvirRankingColecao("rankingGiros", "giros");
-  ouvirRankingColecao("rankingNivel", "nivel");
-  ouvirRankingColecao("rankingMoedas", "moedas");
-  ouvirRankingColecao("rankingRaras", "raras");
-  ouvirChat();
-})();
+garantirQuests();
+atualizarUI();
+renderInventario();
+renderQuests();
+salvar();
