@@ -1,9 +1,10 @@
 body {
   background:
-    linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.90)),
-    url("fundo.jpg");
+    linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.82)),
+    url("./fundo.jpg");
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
   background-attachment: fixed;
   color: white;
   font-family: Arial, sans-serif;
@@ -13,20 +14,23 @@ body {
 }
 
 .titulo-logo {
-  font-size: 58px;
-  margin-bottom: 18px;
-  color: #7aff7a;
-  text-shadow: 0 0 10px #00ff00, 0 0 25px #00ff00, 0 0 45px #00ff00;
+  font-size: 60px;
+  margin: 0 0 18px;
+  color: #66ff66;
   letter-spacing: 2px;
+  text-shadow:
+    0 0 10px #00ff00,
+    0 0 25px #00ff00,
+    0 0 50px #00ff00;
 }
 
 .topoInfo {
-  background: rgba(0, 0, 0, 0.62);
+  background: rgba(0, 0, 0, 0.65);
   padding: 20px;
-  border-radius: 16px;
+  border-radius: 18px;
   max-width: 1200px;
   margin: 0 auto 20px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.45);
 }
 
 .perfilJogador p,
@@ -44,10 +48,10 @@ body {
 
 .badge-titulo {
   display: inline-block;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 999px;
   font-weight: bold;
-  margin-left: 6px;
+  margin-left: 8px;
 }
 
 .titulo-iniciante {
@@ -102,7 +106,7 @@ body {
   width: 320px;
   max-width: 90%;
   height: 20px;
-  margin: 12px auto 18px;
+  margin: 12px auto 0;
   background: rgba(255, 255, 255, 0.12);
   border-radius: 999px;
   overflow: hidden;
@@ -121,19 +125,20 @@ body {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   max-width: 1200px;
   margin: 0 auto 20px;
 }
 
 .abaBtn {
-  padding: 12px 20px;
-  background: rgba(0, 0, 0, 0.7);
+  padding: 12px 22px;
+  background: rgba(0, 0, 0, 0.72);
   border: 1px solid rgba(255,255,255,0.12);
   color: white;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   font-weight: bold;
+  min-width: 120px;
 }
 
 .abaBtn.ativa {
@@ -151,11 +156,10 @@ body {
   display: block;
 }
 
-.painelCentral,
 .painelBox {
   background: rgba(0, 0, 0, 0.76);
-  padding: 20px;
-  border-radius: 15px;
+  padding: 22px;
+  border-radius: 18px;
   box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
 }
 
@@ -174,15 +178,14 @@ button:hover {
   background: #0c7;
 }
 
-.botoesLoja {
+.botoesArea {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .cartaArea {
-  margin-top: 10px;
   position: relative;
 }
 
@@ -196,10 +199,10 @@ button:hover {
 }
 
 .packAnimacao img {
-  width: 220px;
+  width: 240px;
   max-width: 90vw;
-  border-radius: 12px;
-  box-shadow: 0 0 20px black;
+  border-radius: 14px;
+  box-shadow: 0 0 25px black;
 }
 
 .packAbrindo {
@@ -246,7 +249,7 @@ button:hover {
 }
 
 .nomeCartaSorteada {
-  margin-top: 12px;
+  margin-top: 14px;
   font-size: 22px;
   font-weight: bold;
   min-height: 28px;
@@ -306,7 +309,7 @@ button:hover {
 
 .questBox,
 .rankingItem,
-.chatMsg {
+.avisoOffline {
   background: rgba(255,255,255,0.06);
   border-radius: 10px;
   padding: 10px;
@@ -326,28 +329,6 @@ button:hover {
 
 .painelChat {
   grid-column: 1 / -1;
-}
-
-.rankingTop1 { border-left: 4px solid gold; }
-.rankingTop2 { border-left: 4px solid silver; }
-.rankingTop3 { border-left: 4px solid #cd7f32; }
-
-.chatMensagens {
-  height: 320px;
-  overflow-y: auto;
-  margin-bottom: 10px;
-}
-
-.chatEnviar {
-  display: flex;
-  gap: 8px;
-}
-
-.chatEnviar input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
 }
 
 @media (max-width: 900px) {
