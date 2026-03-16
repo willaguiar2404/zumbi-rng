@@ -1,7 +1,7 @@
 body {
   background:
     linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.82)),
-    url("./fundo.jpg");
+    url("fundo.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
