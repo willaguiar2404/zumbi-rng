@@ -41,12 +41,14 @@
   </div>
 
   <section id="abaGiros" class="abaConteudo ativa">
-    <div class="painelCentral">
+    <div class="painelBox">
       <div class="cartaArea">
         <div id="efeitoTela" class="efeitoTela"></div>
+
         <div id="packAnimacao" class="packAnimacao">
           <img id="cartaDisplay" src="cartas/comum1.png" alt="Carta atual" />
         </div>
+
         <p id="nomeCartaSorteada" class="nomeCartaSorteada">Abra um pack</p>
         <div id="resultadoTriplo" class="resultadoTriplo"></div>
       </div>
@@ -56,7 +58,7 @@
   <section id="abaLoja" class="abaConteudo">
     <div class="painelBox">
       <h2>Loja</h2>
-      <div class="botoesLoja">
+      <div class="botoesArea">
         <button onclick="abrirPack('comum')">Pack Comum (100)</button>
         <button onclick="abrirPack('raro')">Pack Raro (800)</button>
         <button onclick="abrirPack('epico')">Pack Épico (5000)</button>
@@ -72,7 +74,7 @@
 
       <hr>
 
-      <h2>Minhas Cartas</h2>
+      <h2>Inventário</h2>
       <div id="inventario"></div>
 
       <hr>
@@ -85,7 +87,8 @@
   <section id="abaBoost" class="abaConteudo">
     <div class="painelBox">
       <h2>Boost</h2>
-      <div class="botoesLoja">
+
+      <div class="botoesArea">
         <button id="btnAbrir3" onclick="alternarAbrir3()">Comprar Abrir 3 (100K)</button>
         <button id="btnAutoOpen" onclick="alternarAutoOpen()">Comprar Auto Open (150K)</button>
         <button onclick="pararAbrir3()">Parar Abrir 3</button>
@@ -103,31 +106,29 @@
   <section id="abaRanking" class="abaConteudo">
     <div class="layoutRanking">
       <div class="painelBox">
-        <h2>🏆 Ranking por Giros</h2>
+        <h2>🏆 Seu Progresso</h2>
         <div id="rankingGiros"></div>
       </div>
 
       <div class="painelBox">
-        <h2>⭐ Ranking por Nível</h2>
+        <h2>⭐ Estatísticas</h2>
         <div id="rankingNivel"></div>
       </div>
 
       <div class="painelBox">
-        <h2>💰 Ranking por Moedas</h2>
+        <h2>💰 Economia</h2>
         <div id="rankingMoedas"></div>
       </div>
 
       <div class="painelBox">
-        <h2>🧬 Ranking por Cartas Raras</h2>
+        <h2>🧬 Coleção</h2>
         <div id="rankingRaras"></div>
       </div>
 
       <div class="painelBox painelChat">
-        <h2>💬 Chat Global</h2>
-        <div id="chatMensagens" class="chatMensagens"></div>
-        <div class="chatEnviar">
-          <input id="chatInput" type="text" maxlength="140" placeholder="Digite sua mensagem..." />
-          <button onclick="enviarMensagemChat()">Enviar</button>
+        <h2>💬 Chat</h2>
+        <div class="avisoOffline">
+          O chat global real volta na próxima etapa, quando ligarmos o banco online sem quebrar o jogo.
         </div>
       </div>
     </div>
