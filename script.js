@@ -21,7 +21,7 @@ function normalizarCarta(carta) {
     nome: String(carta.nome || "Carta"),
     raridade: raridadesValidas.includes(carta.raridade) ? carta.raridade : "comum",
     moeda: Number(carta.moeda) || 0,
-    img: String(carta.img || "cartas/comum1.png")
+    img: String(carta.img || "rng-cartas/cartas/comum1.png")
   };
 }
 
@@ -40,29 +40,29 @@ function clonarCarta(carta) {
     nome: String(carta.nome || "Carta"),
     raridade: String(carta.raridade || "comum"),
     moeda: Number(carta.moeda) || 0,
-    img: String(carta.img || "cartas/comum1.png")
+    img: String(carta.img || "rng-cartas/cartas/comum1.png")
   };
 }
 
 const cartasBase = [
-  { nome: "Zumbi Podre", raridade: "comum", moeda: 2, img: "cartas/comum1.png" },
-  { nome: "Zumbi Soldado", raridade: "comum", moeda: 3, img: "cartas/comum2.png" },
-  { nome: "Zumbi Encapuzado", raridade: "comum", moeda: 4, img: "cartas/comum3.png" },
-  { nome: "Zumbi Pálido", raridade: "comum", moeda: 5, img: "cartas/comum4.png" },
+  { nome: "Zumbi Podre", raridade: "comum", moeda: 2, img: "rng-cartas/cartas/comum1.png" },
+  { nome: "Zumbi Soldado", raridade: "comum", moeda: 3, img: "rng-cartas/cartas/comum2.png" },
+  { nome: "Zumbi Encapuzado", raridade: "comum", moeda: 4, img: "rng-cartas/cartas/comum3.png" },
+  { nome: "Zumbi Pálido", raridade: "comum", moeda: 5, img: "rng-cartas/cartas/comum4.png" },
 
-  { nome: "Zumbi Tático", raridade: "raro", moeda: 9, img: "cartas/rara1.png" },
-  { nome: "Infectado Militar", raridade: "raro", moeda: 11, img: "cartas/rara2.png" },
-  { nome: "Oficial Corrompido", raridade: "raro", moeda: 14, img: "cartas/rara3.png" },
+  { nome: "Zumbi Tático", raridade: "raro", moeda: 9, img: "rng-cartas/cartas/rara1.png" },
+  { nome: "Infectado Militar", raridade: "raro", moeda: 11, img: "rng-cartas/cartas/rara2.png" },
+  { nome: "Oficial Corrompido", raridade: "raro", moeda: 14, img: "rng-cartas/cartas/rara3.png" },
 
-  { nome: "Mutante Brutal", raridade: "epico", moeda: 26, img: "cartas/epica1.png" },
-  { nome: "Lobisomem Infectado", raridade: "epico", moeda: 32, img: "cartas/epica2.png" },
-  { nome: "Aberração Viral", raridade: "epico", moeda: 38, img: "cartas/epica3.png" },
+  { nome: "Mutante Brutal", raridade: "epico", moeda: 26, img: "rng-cartas/cartas/epica1.png" },
+  { nome: "Lobisomem Infectado", raridade: "epico", moeda: 32, img: "rng-cartas/cartas/epica2.png" },
+  { nome: "Aberração Viral", raridade: "epico", moeda: 38, img: "rng-cartas/cartas/epica3.png" },
 
-  { nome: "Rei Zumbi", raridade: "lendario", moeda: 85, img: "cartas/lendaria1.png" },
-  { nome: "Titã da Praga", raridade: "lendario", moeda: 110, img: "cartas/lendaria2.png" },
+  { nome: "Rei Zumbi", raridade: "lendario", moeda: 85, img: "rng-cartas/cartas/lendaria1.png" },
+  { nome: "Titã da Praga", raridade: "lendario", moeda: 110, img: "rng-cartas/cartas/lendaria2.png" },
 
-  { nome: "Imperador Morto", raridade: "secreta", moeda: 800, img: "cartas/secreta1.png" },
-  { nome: "Deus da Infecção", raridade: "secreta2", moeda: 2500, img: "cartas/secreta2.png" }
+  { nome: "Imperador Morto", raridade: "secreta", moeda: 800, img: "rng-cartas/cartas/secreta1.png" },
+  { nome: "Deus da Infecção", raridade: "secreta2", moeda: 2500, img: "rng-cartas/cartas/secreta2.png" }
 ];
 
 const maxEquip = 20;
@@ -77,8 +77,9 @@ const precoPacks = {
   lendario: 25000
 };
 
-if (localStorage.getItem("moedas") === null) {
+if (localStorage.getItem("bonusInicialRecebido") !== "true") {
   localStorage.setItem("moedas", "500");
+  localStorage.setItem("bonusInicialRecebido", "true");
 }
 
 let moedas = carregarNumero("moedas", 500);
@@ -131,9 +132,7 @@ function bonusNivelMoeda() {
 
 function rendaTotal() {
   let total = 0;
-  for (const carta of equipadas) {
-    total += Number(carta.moeda) || 0;
-  }
+  for (const carta of equipadas) total += Number(carta.moeda) || 0;
   return total * bonusNivelMoeda();
 }
 
